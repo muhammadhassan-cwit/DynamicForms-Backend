@@ -1,15 +1,176 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 1. COMPANIES (Tenants)
+// SQL Table: companies
+// ==========================================
+model Company {
+  // SQL: id BIGSERIAL PRIMARY KEY
+  id               BigInt    @id @default(autoincrement())
+  
+  // SQL: company_id UUID DEFAULT uuid_generate_v4() UNIQUE NOT NULL
+  publicId         String    @unique @default(dbgenerated("uuid_generate_v4()")) @map("company_id") @db.Uuid
+  
+  // SQL: company_name VARCHAR(255) NOT NULL
+  name             String    @map("company_name") @db.VarChar(255)
+  
+  // SQL: domain VARCHAR(255) UNIQUE NOT NULL
+  domain           String    @unique @db.VarChar(255)
+  address          String?
+  
+  themeConfig      Json?     @default("{}") @map("theme_config")
+  settingsMetadata Json?     @default("{}") @map("settings_metadata")
+  timezone         String?   @default("UTC") @db.VarChar(100)
+  
+  isActive         Boolean?  @default(true) @map("is_active")
+  isDeleted        Boolean?  @default(false) @map("is_deleted")
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdAt        DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations (These do not exist in SQL, they are for Prisma Code)
+  users           User[]
+  contacts        Contact[]
+  companyForms    CompanyForm[]
+  contactForms    ContactForm[]
+
+  @@map("companies")
+}
+
+// ==========================================
+// 2. USERS (Staff)
+// SQL Table: users
+// ==========================================
+model User {
+  id           BigInt    @id @default(autoincrement())
+  publicId     String    @unique @default(dbgenerated("uuid_generate_v4()")) @map("user_id") @db.Uuid
+  
+  // SQL: company_ref_id BIGINT NOT NULL REFERENCES companies(id)
+  companyId    BigInt    @map("company_ref_id")
+  
+  email        String    @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  fullName     String?   @map("user_full_name") @db.VarChar(255)
+  role         String?   @default("employee") @map("user_role") @db.VarChar(50)
+  profileData  Json?     @default("{}") @map("profile_data")
+
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(6)
+  isActive     Boolean?  @default(true) @map("is_active")
+  isDeleted    Boolean?  @default(false) @map("is_deleted")
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, email], map: "unique_company_staff_email")
+  @@map("users")
+}
+
+// ==========================================
+// 3. FORMS (Versions)
+// SQL Table: forms
+// ==========================================
+model Form {
+  id              BigInt    @id @default(autoincrement())
+  publicId        String?   @default(dbgenerated("uuid_generate_v4()")) @map("form_id") @db.Uuid
+  title           String    @map("form_title") @db.VarChar(255)
+  description     String?   @map("form_description")
+  structureSchema Json      @map("structure_schema")
+  mediaAssets     Json?     @default("[]") @map("media_assets")
+  config          Json?     @default("{}") @map("form_config")
+
+  versionMajor    Int?      @default(1) @map("version_major")
+  versionMinor    Int?      @default(0) @map("version_minor")
+  parentGroupId   String?   @map("parent_form_group_id") @db.Uuid
+  isCurrent       Boolean?  @default(true) @map("is_current_version")
+
+  isPublished     Boolean?  @default(false) @map("is_published")
+  isDeleted       Boolean?  @default(false) @map("is_deleted")
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  companyForms    CompanyForm[]
+  contactForms    ContactForm[]
+
+  @@map("forms")
+}
+
+// ==========================================
+// 4. COMPANY_FORMS (Linking)
+// SQL Table: company_forms
+// ==========================================
+model CompanyForm {
+  id             BigInt    @id @default(autoincrement())
+  companyId      BigInt    @map("company_ref_id")
+  formId         BigInt    @map("form_ref_id")
+  isEnabled      Boolean?  @default(true) @map("is_form_enabled")
+  overrideConfig Json?     @default("{}") @map("custom_override_config")
+  assignedAt     DateTime? @default(now()) @map("assigned_at") @db.Timestamptz(6)
+  updatedAt      DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company        Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  form           Form      @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, formId], map: "unique_company_form_link")
+  @@map("company_forms")
+}
+
+// ==========================================
+// 5. CONTACTS (Leads/Respondents)
+// SQL Table: contacts
+// ==========================================
+model Contact {
+  id           BigInt    @id @default(autoincrement())
+  publicId     String    @unique @default(dbgenerated("uuid_generate_v4()")) @map("contact_id") @db.Uuid
+  companyId    BigInt    @map("company_ref_id")
+  email        String    @db.VarChar(255)
+  fullName     String?   @map("full_name") @db.VarChar(255)
+  contactData  Json?     @default("{}") @map("contact_data")
+
+  createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  submissions  ContactForm[]
+
+  @@unique([companyId, email], map: "unique_company_contact_email")
+  @@map("contacts")
+}
+
+// ==========================================
+// 6. CONTACT_FORMS (Submissions)
+// SQL Table: contact_forms
+// ==========================================
+model ContactForm {
+  id             BigInt    @id @default(autoincrement())
+  submissionId   String    @unique @default(dbgenerated("uuid_generate_v4()")) @map("submission_id") @db.Uuid
+  
+  contactId      BigInt    @map("contact_ref_id")
+  formId         BigInt    @map("form_ref_id")
+  companyId      BigInt    @map("company_ref_id")
+
+  responseData   Json      @map("response_data")
+  status         String?   @default("submitted") @map("submission_status") @db.VarChar(50)
+  deviceMetadata Json?     @default("{}") @map("device_metadata")
+
+  submittedAt    DateTime? @default(now()) @map("submitted_at") @db.Timestamptz(6)
+  updatedAt      DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isDeleted      Boolean?  @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  contact        Contact   @relation(fields: [contactId], references: [id])
+  form           Form      @relation(fields: [formId], references: [id])
+  company        Company   @relation(fields: [companyId], references: [id])
+
+  @@unique([contactId, formId, companyId], map: "unique_contact_submission_per_version")
+  @@map("contact_forms")
 }
