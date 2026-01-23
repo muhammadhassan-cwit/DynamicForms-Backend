@@ -88,7 +88,7 @@ export const updateCompany = async (
     const companyId = req.params.id;
     const updateData = req.body;
 
-    // 🚫 Do not allow empty updates
+    // Do not allow empty updates
     if (!updateData || Object.keys(updateData).length === 0) {
       res.status(400).json({
         success: false,

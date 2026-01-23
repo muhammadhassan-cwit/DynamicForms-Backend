@@ -14,7 +14,7 @@ export const createNewCompany = async (
   data: CreateCompanyInput
 ): Promise<Company> => {
 
-  // ❗ Required fields validation
+  // Required fields validation
   if (!data.name || data.name.trim() === '') {
     throw new BadRequestError('Company name is required');
   }
@@ -27,13 +27,13 @@ export const createNewCompany = async (
     throw new BadRequestError('Company address is required');
   }
 
-  // ❗ Timezone is OPTIONAL
+  //  Timezone is OPTIONAL
   // If provided, it must not be empty
   if (data.timezone !== undefined && data.timezone.trim() === '') {
     throw new BadRequestError('Company timezone cannot be empty');
   }
 
-  // ❗ Check uniqueness
+  //  Check uniqueness
   const existing = await prisma.company.findUnique({
     where: { domain: data.domain },
   });
@@ -44,7 +44,7 @@ export const createNewCompany = async (
     );
   }
 
-  // ❗ Persist company in UTC
+  //  Persist company in UTC
   return prisma.company.create({
     data: {
       name: data.name,
@@ -81,7 +81,7 @@ export const updateCompany = async (
   data: Partial<CreateCompanyInput>
 ): Promise<Company | null> => {
 
-  // ❗ Validate update fields (empty strings not allowed)
+  //  Validate update fields (empty strings not allowed)
 if (data.name !== undefined && data.name.trim() === '') {
   throw new BadRequestError('Company name cannot be empty');
 }
@@ -99,17 +99,17 @@ if (data.timezone !== undefined && data.timezone.trim() === '') {
 }
 
 
-  // 1️⃣ Check existence first
+  //  Check existence first
   const company = await prisma.company.findUnique({
     where: { publicId: companyId },
   });
 
-  // 2️⃣ If not found, return null (no exception)
+  //  If not found, return null (no exception)
   if (!company || company.isDeleted) {
     return null;
   }
 
-  // 3️⃣ Perform update
+  //  Perform update
   const updatedCompany = await prisma.company.update({
     where: { publicId: companyId },
     data: {
@@ -127,17 +127,17 @@ if (data.timezone !== undefined && data.timezone.trim() === '') {
 //softDelete
 export const deleteCompany = async (companyId: string): Promise<boolean> => {
 
-  // 1️⃣ Find company
+  //  Find company
   const company = await prisma.company.findUnique({
     where: { publicId: companyId },
   });
 
-  // 2️⃣ If not found or already deleted
+  //  If not found or already deleted
   if (!company || company.isDeleted) {
     return false;
   }
 
-  // 3️⃣ Soft delete
+  //  Soft delete
   await prisma.company.update({
     where: { publicId: companyId },
     data: {
