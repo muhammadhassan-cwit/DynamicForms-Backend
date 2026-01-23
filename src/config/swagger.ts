@@ -2,7 +2,7 @@ import swaggerJSDoc from 'swagger-jsdoc';
 
 const options: swaggerJSDoc.Options = {
   definition: {
-    openapi: '3.0.0', // Standard version
+    openapi: '3.0.0', 
     info: {
       title: 'DynamicForms API',
       version: '1.0.0',
@@ -10,12 +10,12 @@ const options: swaggerJSDoc.Options = {
     },
     servers: [
       {
-        url: 'http://localhost:5000/api/v1', // This matches your routes
-        description: 'Local Development Server',
+        url: '/api/v1', 
+        description: 'Version 1 API',
       },
     ],
   },
-  // CRITICAL: This tells Swagger to read comments in your route files
+
   apis: ['./src/routes/*.ts'], 
 };
 
