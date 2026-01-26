@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const user_controller_1 = require("../controllers/user-controller");
+const validate_uuid_param_1 = require("../middlewares/validate-uuid-param");
+const router = (0, express_1.Router)();
+router.post('/companies/:companyId/users', (0, validate_uuid_param_1.validateUuidParam)('companyId'), user_controller_1.createUser);
+router.get('/companies/:companyId/users', (0, validate_uuid_param_1.validateUuidParam)('companyId'), user_controller_1.listUsersByCompany);
+router.get('/users/:userId', (0, validate_uuid_param_1.validateUuidParam)('userId'), user_controller_1.getUser);
+router.patch('/users/:userId/deactivate', (0, validate_uuid_param_1.validateUuidParam)('userId'), user_controller_1.deactivateUser);
+exports.default = router;
