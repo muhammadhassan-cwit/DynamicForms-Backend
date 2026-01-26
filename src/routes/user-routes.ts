@@ -4,6 +4,7 @@ import {
     listUsersByCompany,
     getUser,
     deactivateUser,
+    deleteUser,
 } from '../controllers/user-controller';
 import { validateUuidParam } from '../middlewares/validate-uuid-param';
 
@@ -31,6 +32,12 @@ router.patch(
     '/users/:userId/deactivate',
     validateUuidParam('userId'),
     deactivateUser
+);
+
+router.delete(
+    '/users/:userId',
+    validateUuidParam('userId'),
+    deleteUser
 );
 
 export default router;

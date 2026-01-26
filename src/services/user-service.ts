@@ -144,3 +144,31 @@ export const deactivateUser = async (
   return true;
 };
 
+export const softDeleteUser = async (
+  userId: string
+): Promise<boolean> => {
+  if (!userId) {
+    throw new BadRequestError('User ID is required');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { publicId: userId },
+  });
+
+  // Not found OR already deleted → treat as not found
+  if (!user || user.isDeleted) {
+    return false;
+  }
+
+  await prisma.user.update({
+    where: { publicId: userId },
+    data: {
+      isDeleted: true,
+      isActive: false,
+      deletedAt: new Date(),
+    },
+  });
+
+  return true;
+};
+

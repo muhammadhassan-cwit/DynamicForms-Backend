@@ -131,3 +131,30 @@ export const deactivateUser = async (
     next(error);
   }
 };
+
+/**
+ * Soft delete user
+ * DELETE /users/:userId
+ */
+export const deleteUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId } = req.params;
+
+    const deleted = await userService.softDeleteUser(userId);
+
+    if (!deleted) {
+      throw new NotFoundError('User not found');
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
