@@ -1,8 +1,8 @@
-export class NotFoundError extends Error {
-  statusCode = 404;
+import { HttpError } from './http-error';
 
+export class NotFoundError extends HttpError {
   constructor(message: string) {
-    super(message);
+    super(message, 404);
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 }
