@@ -7,6 +7,7 @@ import { HttpError } from './errors/http-error';
 
 // Routes
 import companyRoutes from './routes/company-routes';
+import userRoutes from './routes/user-routes';
 
 const app: Application = express();
 const API_V1 = '/api/v1';
@@ -26,6 +27,7 @@ app.get('/', (req: Request, res: Response) => {
 
 // API Routes
 app.use(`${API_V1}/companies`, companyRoutes);
+app.use(API_V1, userRoutes);
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
