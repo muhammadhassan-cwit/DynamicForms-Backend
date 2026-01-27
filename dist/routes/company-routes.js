@@ -4,10 +4,7 @@ const validate_uuid_param_1 = require("../middlewares/validate-uuid-param");
 const express_1 = require("express");
 const company_controller_1 = require("../controllers/company-controller");
 const router = (0, express_1.Router)();
-// ==============================================================================
-// COMPANY ROUTES
-// Base URL: /api/v1/companies
-// ==============================================================================
+
 /**
  * @swagger
  * /companies:
