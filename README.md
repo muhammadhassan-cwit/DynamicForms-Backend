@@ -42,6 +42,8 @@ Create a `.env` file:
 ```
 DATABASE_URL="postgresql://username:password@localhost:5432/dynamicforms"
 PORT=5000
+NODE_ENV=development
+JWT_SECRET="your-64-character-secret-key"
 ```
 
 ## API Endpoints
@@ -90,7 +92,12 @@ Request → Route → Middleware → Controller → Service → Prisma → Datab
 - [x] Soft delete pattern
 - [x] UUID-based public identifiers
 - [x] Error handling system
-- [ ] JWT Authentication (in progress)
+- [ ] JWT Authentication
+  - [x] JWT configuration (token generation & verification)
+  - [ ] Auth service (login/logout logic)
+  - [ ] Auth controller
+  - [ ] Auth routes
+  - [ ] Auth middleware (route protection)
 - [ ] Dynamic Forms
 - [ ] Form Submissions
 
