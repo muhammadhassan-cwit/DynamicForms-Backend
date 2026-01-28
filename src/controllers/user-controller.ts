@@ -34,6 +34,10 @@ export const createUser = async (
         role: user.role,
         isActive: user.isActive,
         createdAt: user.createdAt,
+        company: {
+          id: user.company.publicId,
+          name: user.company.name,
+        },
       },
     });
   } catch (error) {
@@ -64,6 +68,10 @@ export const listUsersByCompany = async (
         role: user.role,
         isActive: user.isActive,
         createdAt: user.createdAt,
+        company: {
+          id: user.company.publicId,
+          name: user.company.name,
+        },
       })),
     });
   } catch (error) {
@@ -98,6 +106,10 @@ export const getUser = async (
         role: user.role,
         isActive: user.isActive,
         createdAt: user.createdAt,
+        company: {
+          id: user.company.publicId,
+          name: user.company.name,
+        },
       },
     });
   } catch (error) {
