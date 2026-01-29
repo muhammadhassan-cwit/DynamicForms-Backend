@@ -48,6 +48,13 @@ JWT_SECRET="your-64-character-secret-key"
 
 ## API Endpoints
 
+### Auth
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/v1/auth/login | Login user |
+| POST | /api/v1/auth/logout | Logout user |
+
 ### Companies
 
 | Method | Endpoint | Description |
@@ -77,12 +84,15 @@ src/
 ├── controllers/     # Request handlers
 │   ├── company-controller.ts
 │   ├── user-controller.ts
-│   └── auth-controller.ts    # Login/logout handlers
+│   └── auth-controller.ts
 ├── services/        # Business logic
 │   ├── company-service.ts
 │   ├── user-service.ts
 │   └── auth-service.ts
 ├── routes/          # API routes
+│   ├── company-routes.ts
+│   ├── user-routes.ts
+│   └── auth-routes.ts
 ├── middlewares/     # Custom middleware
 ├── errors/          # Error classes
 ├── app.ts           # Express app setup
@@ -105,7 +115,7 @@ Request → Route → Middleware → Controller → Service → Prisma → Datab
   - [x] JWT configuration (token generation & verification)
   - [x] Auth service (login/logout logic)
   - [x] Auth controller
-  - [ ] Auth routes
+  - [x] Auth routes
   - [ ] Auth middleware (route protection)
 - [ ] Dynamic Forms
 - [ ] Form Submissions
