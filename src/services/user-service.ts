@@ -4,6 +4,12 @@ import bcrypt from 'bcrypt';
 import { BadRequestError } from '../errors/bad-request-error';
 import { NotFoundError } from '../errors/not-found-error';
 
+type UserWithCompany = User & {
+  company: {
+    publicId: string;
+    name: string;
+  };
+};
 
 interface CreateUserInput {
   companyId: string; // UUID
@@ -15,7 +21,7 @@ interface CreateUserInput {
 
 export const createUser = async (
   input: CreateUserInput
-): Promise<User> => {
+): Promise<UserWithCompany> => {
   const { companyId, email, password, role, fullName } = input;
 
   //  Required field validation
@@ -58,6 +64,14 @@ export const createUser = async (
         role: role || 'employee',
         isActive: true,
       },
+      include: {
+        company: {
+          select: {
+            publicId: true,
+            name: true,
+            },
+          },
+        },
     });
   } catch (error: any) {
     // Unique constraint violation (email per company)
@@ -73,7 +87,7 @@ export const createUser = async (
 
 export const getUsersByCompany = async (
   companyId: string
-): Promise<User[]> => {
+): Promise<UserWithCompany[]> => {
   //  Validate input
   if (!companyId) {
     throw new BadRequestError('Company ID is required');
@@ -95,6 +109,14 @@ export const getUsersByCompany = async (
       companyId: company.id,
       isDeleted: false,
     },
+    include: {
+      company: {
+        select: {
+          publicId: true,
+          name: true,
+        },
+      },
+    },
     orderBy: {
       createdAt: 'desc',
     },
@@ -103,13 +125,21 @@ export const getUsersByCompany = async (
 
 export const getUserById = async (
   userId: string
-): Promise<User | null> => {
+): Promise<UserWithCompany | null> => {
   if (!userId) {
     throw new BadRequestError('User ID is required');
   }
 
   const user = await prisma.user.findUnique({
     where: { publicId: userId },
+    include: {
+      company: {
+        select: {
+          publicId: true,
+          name: true,
+        },
+      },
+    },
   });
 
   if (!user || user.isDeleted) {
@@ -128,6 +158,7 @@ export const deactivateUser = async (
 
   const user = await prisma.user.findUnique({
     where: { publicId: userId },
+    include: { company: true}
   });
 
   if (!user || user.isDeleted || user.isActive === false) {
@@ -153,6 +184,14 @@ export const softDeleteUser = async (
 
   const user = await prisma.user.findUnique({
     where: { publicId: userId },
+    include: {
+      company: {
+        select: {
+          publicId: true,
+          name: true,
+        },
+      },
+    },
   });
 
   // Not found OR already deleted → treat as not found
