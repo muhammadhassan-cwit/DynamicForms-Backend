@@ -54,10 +54,10 @@ model User {
   
   companyId    BigInt    @map("company_ref_id")
   
-  email        String    @db.VarChar(255)
+  email        String    @unique @db.VarChar(255)
   passwordHash String    @map("password_hash") @db.VarChar(255)
   fullName     String?   @map("user_full_name") @db.VarChar(255)
-  role         String?   @default("employee") @map("user_role") @db.VarChar(50)
+  role         String    @default("employee") @map("user_role") @db.VarChar(50)
   profileData  Json?     @default("{}") @map("profile_data")
 
   lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(6)

@@ -71,8 +71,14 @@ JWT_SECRET="your-64-character-secret-key"
 ```
 src/
 ├── config/          # Configuration files
+│   ├── db-client.ts    # Prisma client
+│   ├── jwt.ts          # JWT token generation/verification
+│   └── swagger.ts      # API docs config
 ├── controllers/     # Request handlers
 ├── services/        # Business logic
+│   ├── company-service.ts
+│   ├── user-service.ts
+│   └── auth-service.ts   # Login/logout logic
 ├── routes/          # API routes
 ├── middlewares/     # Custom middleware
 ├── errors/          # Error classes
@@ -94,12 +100,19 @@ Request → Route → Middleware → Controller → Service → Prisma → Datab
 - [x] Error handling system
 - [ ] JWT Authentication
   - [x] JWT configuration (token generation & verification)
-  - [ ] Auth service (login/logout logic)
+  - [x] Auth service (login/logout logic)
   - [ ] Auth controller
   - [ ] Auth routes
   - [ ] Auth middleware (route protection)
 - [ ] Dynamic Forms
 - [ ] Form Submissions
+
+## Database Schema Notes
+
+### User Model
+- `email` - Unique across the system (one account per email)
+- `role` - Required field, defaults to "employee"
+- `token` - Stores active JWT for session management/revocation
 
 ## Scripts
 ```bash
@@ -107,3 +120,22 @@ npm run dev      # Start development server
 npm run build    # Build for production
 npm start        # Start production server
 ```
+```
+
+---
+
+## Changes Made
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  UPDATES IN README:                                             │
+│                                                                 │
+│  1. ✅ Marked "Auth service (login/logout logic)" as complete   │
+│                                                                 │
+│  2. ✅ Added auth-service.ts to Project Structure               │
+│                                                                 │
+│  3. ✅ Added "Database Schema Notes" section                    │
+│        - Explains email uniqueness                              │
+│        - Explains role requirement                              │
+│        - Explains token field purpose                           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
