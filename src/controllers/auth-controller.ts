@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as authService from '../services/auth-service';
+import { AuthRequest } from '../middlewares/auth-middleware';  
 
 export const loginUser = async (
     req: Request,
@@ -23,19 +24,25 @@ export const loginUser = async (
 };
 
 export const logoutUser = async (
-    req: Request,
+    req: AuthRequest,       
     res: Response,
     next: NextFunction
 ) => {
     try {
-        const { userId } = req.body;
+        const userId = req.user?.userId;  
 
-        const result = await authService.logout(userId);
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User not authenticated',
+            });
+        }
+
+        await authService.logout(userId);
 
         res.status(200).json({
             success: true,
-            message: 'Logout Successful',  
-            data: result,
+            message: 'Logout Successful',
         });
     } catch (error) {
         next(error);

@@ -53,7 +53,7 @@ JWT_SECRET="your-64-character-secret-key"
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | /api/v1/auth/login | Login user |
-| POST | /api/v1/auth/logout | Logout user |
+| POST | /api/v1/auth/logout | Logout user (protected) |
 
 ### Companies
 
@@ -94,6 +94,8 @@ src/
 │   ├── user-routes.ts
 │   └── auth-routes.ts
 ├── middlewares/     # Custom middleware
+│   ├── validate-uuid-param.ts
+│   └── auth-middleware.ts    # JWT authentication
 ├── errors/          # Error classes
 ├── app.ts           # Express app setup
 └── server.ts        # Entry point
@@ -104,6 +106,20 @@ src/
 Request → Route → Middleware → Controller → Service → Prisma → Database
 ```
 
+## Authentication
+
+### How It Works
+1. User logs in with email/password
+2. Server returns JWT token
+3. Client includes token in subsequent requests
+4. Middleware validates token before allowing access
+
+### Using Protected Routes
+Include the token in the Authorization header:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
 ## Features Implemented
 
 - [x] Company CRUD
@@ -111,12 +127,12 @@ Request → Route → Middleware → Controller → Service → Prisma → Datab
 - [x] Soft delete pattern
 - [x] UUID-based public identifiers
 - [x] Error handling system
-- [ ] JWT Authentication
+- [x] JWT Authentication
   - [x] JWT configuration (token generation & verification)
   - [x] Auth service (login/logout logic)
   - [x] Auth controller
   - [x] Auth routes
-  - [ ] Auth middleware (route protection)
+  - [x] Auth middleware (route protection)
 - [ ] Dynamic Forms
 - [ ] Form Submissions
 
