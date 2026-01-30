@@ -1,5 +1,5 @@
 import { validateUuidParam } from '../middlewares/validate-uuid-param';
-import { authenticate } from '../middlewares/auth-middleware';
+import { authenticate, authorize } from '../middlewares/auth-middleware';
 import { Router } from 'express';
 import {
   createCompany,
@@ -53,7 +53,7 @@ const router = Router();
  *       200:
  *         description: A list of companies
  */
-router.post('/', authenticate, createCompany);
+router.post('/', authenticate, authorize('admin'), createCompany);
 router.get('/', authenticate, listCompanies);
 
 /**
@@ -132,7 +132,7 @@ router.get('/', authenticate, listCompanies);
  *         description: Invalid company ID format
  */
 router.get('/:id', authenticate, validateUuidParam('id'), getCompany);
-router.patch('/:id', authenticate, validateUuidParam('id'), updateCompany);
-router.delete('/:id', authenticate, validateUuidParam('id'), deleteCompany);
+router.patch('/:id', authenticate, authorize('admin'), validateUuidParam('id'), updateCompany);
+router.delete('/:id', authenticate, authorize('admin'), validateUuidParam('id'), deleteCompany);
 
 export default router;

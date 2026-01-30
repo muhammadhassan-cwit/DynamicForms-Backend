@@ -31,8 +31,9 @@ app.use(`${API_V1}/companies`, companyRoutes);
 app.use(API_V1, userRoutes);
 app.use(`${API_V1}/auth`, authRoutes);
 
+// Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-
+  // Handle our custom HttpError
   if (err instanceof HttpError) {
     return res.status(err.statusCode).json({
       success: false,
@@ -40,6 +41,15 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
   }
 
+  // Handle body-parser and other errors with statusCode/status
+  if (err.statusCode || err.status) {
+    return res.status(err.statusCode || err.status).json({
+      success: false,
+      message: err.message || 'Bad Request',
+    });
+  }
+
+  // Unknown errors = 500
   console.error(err);
 
   return res.status(500).json({
