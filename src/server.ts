@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import app from './app';
 import { prisma } from './config/db-client';
 

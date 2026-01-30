@@ -50,29 +50,30 @@ JWT_SECRET="your-64-character-secret-key"
 
 ### Auth
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/v1/auth/login | Login user |
-| POST | /api/v1/auth/logout | Logout user (protected) |
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | /api/v1/auth/login | Login user | No |
+| POST | /api/v1/auth/logout | Logout user | Yes |
 
 ### Companies
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/v1/companies | Create company |
-| GET | /api/v1/companies | List all companies |
-| GET | /api/v1/companies/:companyId | Get company by ID |
-| PATCH | /api/v1/companies/:companyId | Update company |
-| DELETE | /api/v1/companies/:companyId | Soft delete company |
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | /api/v1/companies | Create company | Yes |
+| GET | /api/v1/companies | List all companies | Yes |
+| GET | /api/v1/companies/:companyId | Get company by ID | Yes |
+| PATCH | /api/v1/companies/:companyId | Update company | Yes |
+| DELETE | /api/v1/companies/:companyId | Soft delete company | Yes |
 
 ### Users
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/v1/companies/:companyId/users | Create user |
-| GET | /api/v1/companies/:companyId/users | List company users |
-| GET | /api/v1/users/:userId | Get user by ID |
-| DELETE | /api/v1/users/:userId | Soft delete user |
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | /api/v1/companies/:companyId/users | Create user | Yes |
+| GET | /api/v1/companies/:companyId/users | List company users | Yes |
+| GET | /api/v1/users/:userId | Get user by ID | Yes |
+| PATCH | /api/v1/users/:userId/deactivate | Deactivate user | Yes |
+| DELETE | /api/v1/users/:userId | Soft delete user | Yes |
 
 ## Project Structure
 ```
@@ -95,7 +96,7 @@ src/
 │   └── auth-routes.ts
 ├── middlewares/     # Custom middleware
 │   ├── validate-uuid-param.ts
-│   └── auth-middleware.ts    # JWT authentication
+│   └── auth-middleware.ts
 ├── errors/          # Error classes
 ├── app.ts           # Express app setup
 └── server.ts        # Entry point
@@ -133,6 +134,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   - [x] Auth controller
   - [x] Auth routes
   - [x] Auth middleware (route protection)
+  - [x] Protected routes (all routes require auth)
+- [ ] Role-based authorization
 - [ ] Dynamic Forms
 - [ ] Form Submissions
 
