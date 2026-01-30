@@ -50,30 +50,30 @@ JWT_SECRET="your-64-character-secret-key"
 
 ### Auth
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | /api/v1/auth/login | Login user | No |
-| POST | /api/v1/auth/logout | Logout user | Yes |
+| Method | Endpoint | Description | Auth | Role |
+|--------|----------|-------------|------|------|
+| POST | /api/v1/auth/login | Login user | No | - |
+| POST | /api/v1/auth/logout | Logout user | Yes | Any |
 
 ### Companies
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | /api/v1/companies | Create company | Yes |
-| GET | /api/v1/companies | List all companies | Yes |
-| GET | /api/v1/companies/:companyId | Get company by ID | Yes |
-| PATCH | /api/v1/companies/:companyId | Update company | Yes |
-| DELETE | /api/v1/companies/:companyId | Soft delete company | Yes |
+| Method | Endpoint | Description | Auth | Role |
+|--------|----------|-------------|------|------|
+| POST | /api/v1/companies | Create company | Yes | Admin |
+| GET | /api/v1/companies | List all companies | Yes | Any |
+| GET | /api/v1/companies/:companyId | Get company by ID | Yes | Any |
+| PATCH | /api/v1/companies/:companyId | Update company | Yes | Admin |
+| DELETE | /api/v1/companies/:companyId | Soft delete company | Yes | Admin |
 
 ### Users
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | /api/v1/companies/:companyId/users | Create user | Yes |
-| GET | /api/v1/companies/:companyId/users | List company users | Yes |
-| GET | /api/v1/users/:userId | Get user by ID | Yes |
-| PATCH | /api/v1/users/:userId/deactivate | Deactivate user | Yes |
-| DELETE | /api/v1/users/:userId | Soft delete user | Yes |
+| Method | Endpoint | Description | Auth | Role |
+|--------|----------|-------------|------|------|
+| POST | /api/v1/companies/:companyId/users | Create user | Yes | Admin |
+| GET | /api/v1/companies/:companyId/users | List company users | Yes | Any |
+| GET | /api/v1/users/:userId | Get user by ID | Yes | Any |
+| PATCH | /api/v1/users/:userId/deactivate | Deactivate user | Yes | Admin |
+| DELETE | /api/v1/users/:userId | Soft delete user | Yes | Admin |
 
 ## Project Structure
 ```
@@ -96,7 +96,7 @@ src/
 │   └── auth-routes.ts
 ├── middlewares/     # Custom middleware
 │   ├── validate-uuid-param.ts
-│   └── auth-middleware.ts
+│   └── auth-middleware.ts    # Authentication & Authorization
 ├── errors/          # Error classes
 ├── app.ts           # Express app setup
 └── server.ts        # Entry point
@@ -107,19 +107,24 @@ src/
 Request → Route → Middleware → Controller → Service → Prisma → Database
 ```
 
-## Authentication
+## Authentication & Authorization
 
 ### How It Works
 1. User logs in with email/password
 2. Server returns JWT token
 3. Client includes token in subsequent requests
 4. Middleware validates token before allowing access
+5. Role-based middleware checks permissions
 
 ### Using Protected Routes
 Include the token in the Authorization header:
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
+
+### Roles
+- **Admin**: Full access (create, read, update, delete)
+- **Employee**: Limited access (read only)
 
 ## Features Implemented
 
@@ -135,7 +140,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   - [x] Auth routes
   - [x] Auth middleware (route protection)
   - [x] Protected routes (all routes require auth)
-- [ ] Role-based authorization
+- [x] Role-based authorization
 - [ ] Dynamic Forms
 - [ ] Form Submissions
 
