@@ -1,16 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
 import * as companyService from '../services/company-service';
 
-/**
- * Create a new company
- * POST /api/v1/companies
- */
+
 export const createCompany = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    const { name, domain } = req.body;
+
+    // Validation
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company name is required',
+      });
+    }
+
+    if (!domain) {
+      return res.status(400).json({
+        success: false,
+        message: 'Domain is required',
+      });
+    }
+
     const company = await companyService.createNewCompany(req.body);
 
     res.status(201).json({
@@ -23,10 +37,7 @@ export const createCompany = async (
   }
 };
 
-/**
- * List all companies
- * GET /api/v1/companies
- */
+
 export const listCompanies = async (
   req: Request,
   res: Response,
@@ -44,10 +55,7 @@ export const listCompanies = async (
   }
 };
 
-/**
- * Get single company by publicId
- * GET /api/v1/companies/:id
- */
+
 export const getCompany = async (
   req: Request,
   res: Response,
@@ -55,6 +63,14 @@ export const getCompany = async (
 ) => {
   try {
     const companyId = req.params.id;
+
+    // Validation
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company ID is required',
+      });
+    }
 
     const company = await companyService.getCompanyById(companyId);
 
@@ -75,10 +91,7 @@ export const getCompany = async (
   }
 };
 
-/**
- * Update company
- * PATCH /api/v1/companies/:id
- */
+
 export const updateCompany = async (
   req: Request,
   res: Response,
@@ -88,7 +101,14 @@ export const updateCompany = async (
     const companyId = req.params.id;
     const updateData = req.body;
 
-    // Do not allow empty updates
+    // Validation
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company ID is required',
+      });
+    }
+
     if (!updateData || Object.keys(updateData).length === 0) {
       res.status(400).json({
         success: false,
@@ -120,10 +140,7 @@ export const updateCompany = async (
   }
 };
 
-/**
- * Soft delete company
- * DELETE /api/v1/companies/:id
- */
+
 export const deleteCompany = async (
   req: Request,
   res: Response,
@@ -131,6 +148,14 @@ export const deleteCompany = async (
 ) => {
   try {
     const companyId = req.params.id;
+
+    // Validation
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company ID is required',
+      });
+    }
 
     const deleted = await companyService.deleteCompany(companyId);
 
