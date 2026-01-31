@@ -86,37 +86,59 @@ JWT_SECRET="your-64-character-secret-key"
 | PATCH | /api/v1/forms/:formId | Update form (creates new version) | Yes | Admin |
 | DELETE | /api/v1/forms/:formId | Soft delete form | Yes | Admin |
 
+### Public (No Auth Required)
+
+| Method | Endpoint | Description | Auth | Role |
+|--------|----------|-------------|------|------|
+| GET | /api/v1/public/forms/:formId | Get public form to fill | No | - |
+| POST | /api/v1/public/forms/:formId/submit | Submit form response | No | - |
+| GET | /api/v1/public/submissions/:id?email=x | View own submission | No | - |
+
+### Submissions (Admin)
+
+| Method | Endpoint | Description | Auth | Role |
+|--------|----------|-------------|------|------|
+| GET | /api/v1/forms/:formId/submissions | List all submissions | Yes | Any |
+| GET | /api/v1/submissions/:submissionId | Get submission details | Yes | Any |
+| DELETE | /api/v1/submissions/:submissionId | Delete submission | Yes | Admin |
+
 ## Project Structure
 ```
 src/
-├── config/          # Configuration files
-│   ├── db-client.ts    # Prisma client
-│   ├── jwt.ts          # JWT token generation/verification
-│   └── swagger.ts      # API docs config
-├── controllers/     # Request handlers
+├── config/
+│   ├── db-client.ts
+│   ├── jwt.ts
+│   └── swagger.ts
+├── controllers/
 │   ├── company-controller.ts
 │   ├── user-controller.ts
 │   ├── auth-controller.ts
-│   └── form-controller.ts
-├── services/        # Business logic
+│   ├── form-controller.ts
+│   ├── public-form-controller.ts
+│   └── submission-controller.ts
+├── services/
 │   ├── company-service.ts
 │   ├── user-service.ts
 │   ├── auth-service.ts
-│   └── form-service.ts
-├── routes/          # API routes
+│   ├── form-service.ts
+│   ├── public-form-service.ts
+│   └── submission-service.ts
+├── routes/
 │   ├── company-routes.ts
 │   ├── user-routes.ts
 │   ├── auth-routes.ts
-│   └── form-routes.ts
-├── middlewares/     # Custom middleware
+│   ├── form-routes.ts
+│   ├── public-routes.ts
+│   └── submission-routes.ts
+├── middlewares/
 │   ├── validate-uuid-param.ts
 │   └── auth-middleware.ts
-├── errors/          # Error classes
+├── errors/
 │   ├── http-error.ts
 │   ├── bad-request-error.ts
 │   └── not-found-error.ts
-├── app.ts           # Express app setup
-└── server.ts        # Entry point
+├── app.ts
+└── server.ts
 ```
 
 ## Architecture
@@ -184,6 +206,27 @@ Forms support versioning to maintain history when forms are modified:
 }
 ```
 
+## Public Forms
+
+Forms can be accessed publicly (without authentication) when:
+- `isPublished: true` - Form is published
+- `isCurrent: true` - Form is the active version
+- `isDeleted: false` - Form is not deleted
+
+### Public Form Flow
+
+1. Customer visits public form URL
+2. System checks if form is published and current
+3. Customer fills and submits form with email
+4. Submission is stored with contact info
+5. Customer can view their submission using submissionId + email
+
+### Submission Rules
+
+- One submission per email per form version
+- If form version changes, same email can submit again
+- Contact is created on first submission, reused for subsequent forms
+
 ## Input Validation
 
 All endpoints validate input and return appropriate error responses:
@@ -217,8 +260,14 @@ All endpoints validate input and return appropriate error responses:
   - [x] Update form (versioning)
   - [x] Delete form (soft delete)
   - [x] Version history
-- [ ] Public Form API
-- [ ] Form Submissions
+- [x] Public Form API
+  - [x] View public form
+  - [x] Submit form
+  - [x] View own submission
+- [x] Admin Submissions API
+  - [x] List submissions
+  - [x] View submission details
+  - [x] Delete submission (admin only)
 
 ## Scripts
 ```bash
