@@ -61,9 +61,9 @@ JWT_SECRET="your-64-character-secret-key"
 |--------|----------|-------------|------|------|
 | POST | /api/v1/companies | Create company | Yes | Admin |
 | GET | /api/v1/companies | List all companies | Yes | Any |
-| GET | /api/v1/companies/:companyId | Get company by ID | Yes | Any |
-| PATCH | /api/v1/companies/:companyId | Update company | Yes | Admin |
-| DELETE | /api/v1/companies/:companyId | Soft delete company | Yes | Admin |
+| GET | /api/v1/companies/:id | Get company by ID | Yes | Any |
+| PATCH | /api/v1/companies/:id | Update company | Yes | Admin |
+| DELETE | /api/v1/companies/:id | Soft delete company | Yes | Admin |
 
 ### Users
 
@@ -75,6 +75,17 @@ JWT_SECRET="your-64-character-secret-key"
 | PATCH | /api/v1/users/:userId/deactivate | Deactivate user | Yes | Admin |
 | DELETE | /api/v1/users/:userId | Soft delete user | Yes | Admin |
 
+### Forms
+
+| Method | Endpoint | Description | Auth | Role |
+|--------|----------|-------------|------|------|
+| POST | /api/v1/forms | Create form | Yes | Admin |
+| GET | /api/v1/forms | List company forms | Yes | Any |
+| GET | /api/v1/forms/:formId | Get form by ID | Yes | Any |
+| GET | /api/v1/forms/:formId/versions | Get form version history | Yes | Any |
+| PATCH | /api/v1/forms/:formId | Update form (creates new version) | Yes | Admin |
+| DELETE | /api/v1/forms/:formId | Soft delete form | Yes | Admin |
+
 ## Project Structure
 ```
 src/
@@ -85,19 +96,25 @@ src/
 ├── controllers/     # Request handlers
 │   ├── company-controller.ts
 │   ├── user-controller.ts
-│   └── auth-controller.ts
+│   ├── auth-controller.ts
+│   └── form-controller.ts
 ├── services/        # Business logic
 │   ├── company-service.ts
 │   ├── user-service.ts
-│   └── auth-service.ts
+│   ├── auth-service.ts
+│   └── form-service.ts
 ├── routes/          # API routes
 │   ├── company-routes.ts
 │   ├── user-routes.ts
-│   └── auth-routes.ts
+│   ├── auth-routes.ts
+│   └── form-routes.ts
 ├── middlewares/     # Custom middleware
 │   ├── validate-uuid-param.ts
-│   └── auth-middleware.ts    # Authentication & Authorization
+│   └── auth-middleware.ts
 ├── errors/          # Error classes
+│   ├── http-error.ts
+│   ├── bad-request-error.ts
+│   └── not-found-error.ts
 ├── app.ts           # Express app setup
 └── server.ts        # Entry point
 ```
@@ -110,6 +127,7 @@ Request → Route → Middleware → Controller → Service → Prisma → Datab
 ## Authentication & Authorization
 
 ### How It Works
+
 1. User logs in with email/password
 2. Server returns JWT token
 3. Client includes token in subsequent requests
@@ -117,14 +135,64 @@ Request → Route → Middleware → Controller → Service → Prisma → Datab
 5. Role-based middleware checks permissions
 
 ### Using Protected Routes
+
 Include the token in the Authorization header:
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 ### Roles
+
 - **Admin**: Full access (create, read, update, delete)
 - **Employee**: Limited access (read only)
+
+## Form Versioning
+
+Forms support versioning to maintain history when forms are modified:
+
+- **parentGroupId**: Links all versions of the same form together
+- **versionMajor/versionMinor**: Semantic versioning (e.g., 1.0, 1.1, 2.0)
+- **isCurrent**: Indicates the active version
+
+### How It Works
+
+1. Admin creates form → Version 1.0
+2. Admin updates form → Old version marked as `isCurrent: false`, new version 1.1 created
+3. Major changes → Version increments to 2.0
+4. Old versions preserved for submission history
+
+### Example Form Structure
+```json
+{
+  "title": "Customer Feedback",
+  "description": "Get feedback from customers",
+  "structureSchema": [
+    {
+      "id": "name",
+      "type": "text",
+      "label": "Your Name",
+      "required": true
+    },
+    {
+      "id": "rating",
+      "type": "select",
+      "label": "Rating",
+      "options": ["Excellent", "Good", "Average", "Poor"],
+      "required": true
+    }
+  ]
+}
+```
+
+## Input Validation
+
+All endpoints validate input and return appropriate error responses:
+
+- **400 Bad Request**: Missing or invalid input data
+- **401 Unauthorized**: Missing or invalid token
+- **403 Forbidden**: Insufficient permissions
+- **404 Not Found**: Resource not found
+- **500 Internal Server Error**: Server-side errors
 
 ## Features Implemented
 
@@ -133,23 +201,24 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 - [x] Soft delete pattern
 - [x] UUID-based public identifiers
 - [x] Error handling system
+- [x] Input validation
 - [x] JWT Authentication
-  - [x] JWT configuration (token generation & verification)
-  - [x] Auth service (login/logout logic)
+  - [x] JWT configuration
+  - [x] Auth service (login/logout)
   - [x] Auth controller
   - [x] Auth routes
-  - [x] Auth middleware (route protection)
-  - [x] Protected routes (all routes require auth)
+  - [x] Auth middleware
+  - [x] Protected routes
 - [x] Role-based authorization
-- [ ] Dynamic Forms
+- [x] Form CRUD
+  - [x] Create form
+  - [x] List forms by company
+  - [x] Get form by ID
+  - [x] Update form (versioning)
+  - [x] Delete form (soft delete)
+  - [x] Version history
+- [ ] Public Form API
 - [ ] Form Submissions
-
-## Database Schema Notes
-
-### User Model
-- `email` - Unique across the system (one account per email)
-- `role` - Required field, defaults to "employee"
-- `token` - Stores active JWT for session management/revocation
 
 ## Scripts
 ```bash

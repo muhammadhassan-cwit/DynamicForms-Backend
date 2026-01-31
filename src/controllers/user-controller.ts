@@ -3,10 +3,7 @@ import * as userService from '../services/user-service';
 import { BadRequestError } from '../errors/bad-request-error';
 import { NotFoundError } from '../errors/not-found-error';
 
-/**
- * Create a new user under a company
- * POST /companies/:companyId/users
- */
+
 export const createUser = async (
   req: Request,
   res: Response,
@@ -15,6 +12,28 @@ export const createUser = async (
   try {
     const { companyId } = req.params;
     const { email, password, role, fullName } = req.body;
+
+    // Validation
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company ID is required',
+      });
+    }
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required',
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required',
+      });
+    }
 
     const user = await userService.createUser({
       companyId,
@@ -45,10 +64,7 @@ export const createUser = async (
   }
 };
 
-/**
- * List users of a company
- * GET /companies/:companyId/users
- */
+
 export const listUsersByCompany = async (
   req: Request,
   res: Response,
@@ -56,6 +72,14 @@ export const listUsersByCompany = async (
 ) => {
   try {
     const { companyId } = req.params;
+
+    // Validation
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company ID is required',
+      });
+    }
 
     const users = await userService.getUsersByCompany(companyId);
 
@@ -79,10 +103,7 @@ export const listUsersByCompany = async (
   }
 };
 
-/**
- * Get single user by ID
- * GET /users/:userId
- */
+
 export const getUser = async (
   req: Request,
   res: Response,
@@ -90,6 +111,14 @@ export const getUser = async (
 ) => {
   try {
     const { userId } = req.params;
+
+    // Validation
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required',
+      });
+    }
 
     const user = await userService.getUserById(userId);
 
@@ -117,10 +146,7 @@ export const getUser = async (
   }
 };
 
-/**
- * Deactivate user
- * PATCH /users/:userId/deactivate
- */
+
 export const deactivateUser = async (
   req: Request,
   res: Response,
@@ -128,6 +154,14 @@ export const deactivateUser = async (
 ) => {
   try {
     const { userId } = req.params;
+
+    // Validation
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required',
+      });
+    }
 
     const deactivated = await userService.deactivateUser(userId);
 
@@ -144,10 +178,7 @@ export const deactivateUser = async (
   }
 };
 
-/**
- * Soft delete user
- * DELETE /users/:userId
- */
+
 export const deleteUser = async (
   req: Request,
   res: Response,
@@ -155,6 +186,14 @@ export const deleteUser = async (
 ) => {
   try {
     const { userId } = req.params;
+
+    // Validation
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required',
+      });
+    }
 
     const deleted = await userService.softDeleteUser(userId);
 
