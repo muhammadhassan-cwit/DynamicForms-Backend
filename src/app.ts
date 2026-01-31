@@ -11,6 +11,7 @@ import userRoutes from './routes/user-routes';
 import authRoutes from './routes/auth-routes';
 import formRoutes from './routes/form-routes';
 import publicRoutes from './routes/public-routes';
+import submissionRoutes from './routes/submission-routes';
 
 const app: Application = express();
 const API_V1 = '/api/v1';
@@ -34,6 +35,7 @@ app.use(API_V1, userRoutes);
 app.use(`${API_V1}/auth`, authRoutes);
 app.use(`${API_V1}/forms`, formRoutes);
 app.use(`${API_V1}/public`, publicRoutes);
+app.use(API_V1, submissionRoutes);
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
