@@ -12,30 +12,20 @@ datasource db {
 // SQL Table: companies
 // ==========================================
 model Company {
-  // SQL: id BIGSERIAL PRIMARY KEY
   id               BigInt    @id @default(autoincrement())
-  
-  // SQL: company_id UUID DEFAULT uuid_generate_v4() UNIQUE NOT NULL
   publicId         String    @unique @default(dbgenerated("uuid_generate_v4()")) @map("company_id") @db.Uuid
-  
-  // SQL: company_name VARCHAR(255) NOT NULL
   name             String    @map("company_name") @db.VarChar(255)
-  
-  // SQL: domain VARCHAR(255) UNIQUE NOT NULL
   domain           String    @unique @db.VarChar(255)
   address          String?
-  
   themeConfig      Json?     @default("{}") @map("theme_config")
   settingsMetadata Json?     @default("{}") @map("settings_metadata")
   timezone         String?   @default("UTC") @db.VarChar(100)
-  
   isActive         Boolean?  @default(true) @map("is_active")
   isDeleted        Boolean?  @default(false) @map("is_deleted")
   deletedAt        DateTime? @map("deleted_at") @db.Timestamptz(6)
   createdAt        DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  // Relations (These do not exist in SQL, they are for Prisma Code)
   users           User[]
   contacts        Contact[]
   companyForms    CompanyForm[]
@@ -51,15 +41,12 @@ model Company {
 model User {
   id           BigInt    @id @default(autoincrement())
   publicId     String    @unique @default(dbgenerated("uuid_generate_v4()")) @map("user_id") @db.Uuid
-  
   companyId    BigInt    @map("company_ref_id")
-  
   email        String    @unique @db.VarChar(255)
   passwordHash String    @map("password_hash") @db.VarChar(255)
   fullName     String?   @map("user_full_name") @db.VarChar(255)
   role         String    @default("employee") @map("user_role") @db.VarChar(50)
   profileData  Json?     @default("{}") @map("profile_data")
-
   lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(6)
   token        String?   @map("auth_token")
   isActive     Boolean?  @default(true) @map("is_active")
@@ -85,13 +72,12 @@ model Form {
   description     String?   @map("form_description")
   structureSchema Json      @map("structure_schema")
   mediaAssets     Json?     @default("[]") @map("media_assets")
-  config          Json?     @default("{}") @map("form_config")
+  formConfig      Json?     @default("{}") @map("form_config")
 
   versionMajor    Int?      @default(1) @map("version_major")
   versionMinor    Int?      @default(0) @map("version_minor")
   parentGroupId   String?   @map("parent_form_group_id") @db.Uuid
   isCurrent       Boolean?  @default(true) @map("is_current_version")
-
   isPublished     Boolean?  @default(false) @map("is_published")
   isDeleted       Boolean?  @default(false) @map("is_deleted")
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
@@ -101,11 +87,34 @@ model Form {
   companyForms    CompanyForm[]
   contactForms    ContactForm[]
 
+  fields          FormField[]   // Reverse relation to FormField
+
   @@map("forms")
 }
 
 // ==========================================
-// 4. COMPANY_FORMS (Linking)
+// 4. FORM FIELDS (Dynamic Fields for Forms)
+// SQL Table: form_fields
+// ==========================================
+model FormField {
+  id            BigInt    @id @default(autoincrement())
+  formId        BigInt
+  label         String    // Label for the field (e.g., "Full Name")
+  type          String    // Field type (text, number, checkbox, radio, file, image, etc.)
+  isRequired    Boolean   @default(false)
+  options       Json?     // Options for checkbox, radio (JSON array for multiple options)
+  maxSize       Int?      // Max file size for file fields (in bytes)
+  allowedTypes  String?   // Allowed MIME types for file (e.g., 'image/png', 'video/mp4')
+  placeholder   String?   // Placeholder text for text input fields
+  fileUrl       String?   // File URL for file/image/video fields
+
+  form          Form      @relation(fields: [formId], references: [id])
+
+  @@map("form_fields")
+}
+
+// ==========================================
+// 5. COMPANY_FORMS (Linking Forms to Companies)
 // SQL Table: company_forms
 // ==========================================
 model CompanyForm {
@@ -125,7 +134,7 @@ model CompanyForm {
 }
 
 // ==========================================
-// 5. CONTACTS (Leads/Respondents)
+// 6. CONTACTS (Leads/Respondents)
 // SQL Table: contacts
 // ==========================================
 model Contact {
@@ -147,13 +156,12 @@ model Contact {
 }
 
 // ==========================================
-// 6. CONTACT_FORMS (Submissions)
+// 7. CONTACT_FORMS (Submissions)
 // SQL Table: contact_forms
 // ==========================================
 model ContactForm {
   id             BigInt    @id @default(autoincrement())
   submissionId   String    @unique @default(dbgenerated("uuid_generate_v4()")) @map("submission_id") @db.Uuid
-  
   contactId      BigInt    @map("contact_ref_id")
   formId         BigInt    @map("form_ref_id")
   companyId      BigInt    @map("company_ref_id")
@@ -161,7 +169,6 @@ model ContactForm {
   responseData   Json      @map("response_data")
   status         String?   @default("submitted") @map("submission_status") @db.VarChar(50)
   deviceMetadata Json?     @default("{}") @map("device_metadata")
-
   submittedAt    DateTime? @default(now()) @map("submitted_at") @db.Timestamptz(6)
   updatedAt      DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   isDeleted      Boolean?  @default(false) @map("is_deleted")
