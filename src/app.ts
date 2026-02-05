@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger'; 
 import { HttpError } from './errors/http-error';
+import path from 'path';
 
 // Routes
 import companyRoutes from './routes/company-routes';
@@ -20,6 +21,8 @@ const API_V1 = '/api/v1';
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
