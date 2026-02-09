@@ -29,7 +29,8 @@ const DEFAULT_FILE_MAX_SIZE = 10 * 1024 * 1024;
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const formId = req.params.formId;
-    const uploadPath = path.join('uploads', formId);
+    // Upload to temp folder instead of uploads
+    const uploadPath = path.join('temp', formId);
     fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);
   },

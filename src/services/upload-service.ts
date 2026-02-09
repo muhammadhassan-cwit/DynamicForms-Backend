@@ -91,6 +91,7 @@ export const processUpload = async (
     throw new BadRequestError(`File type '${file.mimetype}' is not allowed for this field`);
   }
 
+  // Return temp file path (will be moved to uploads on successful submission)
   const filePath = `/${file.path.replace(/\\/g, '/')}`;
 
   return {
