@@ -1,6 +1,7 @@
 import { prisma } from '../config/db-client';
 import { BadRequestError } from '../errors/bad-request-error';
 import { NotFoundError } from '../errors/not-found-error';
+import { moveFilesToUploads } from '../utils/file-utils';
 
 export const getPublicForm = async (formId: string) => {
   const form = await prisma.form.findFirst({
@@ -118,12 +119,15 @@ export const submitForm = async (
     throw new BadRequestError('You have already submitted this form');
   }
 
+  // Move files from temp to uploads folder
+  const finalResponseData = moveFilesToUploads(data.responseData, formId);
+
   const submission = await prisma.contactForm.create({
     data: {
       contactId: contact.id,
       formId: form.id,
       companyId: companyId,
-      responseData: data.responseData,
+      responseData: finalResponseData,
       status: 'submitted',
     },
   });

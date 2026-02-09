@@ -92,6 +92,8 @@ JWT_SECRET="your-64-character-secret-key"
 |--------|----------|-------------|------|------|
 | GET | /api/v1/public/forms/:formId | Get public form to fill | No | - |
 | POST | /api/v1/public/forms/:formId/submit | Submit form response | No | - |
+| POST | /api/v1/public/forms/:formId/validate-upload | Validate file before upload | No | - |
+| POST | /api/v1/public/forms/:formId/upload | Upload file for form field | No | - |
 | GET | /api/v1/public/submissions/:id?email=x | View own submission | No | - |
 
 ### Submissions (Admin)
@@ -108,6 +110,7 @@ src/
 ├── config/
 │   ├── db-client.ts
 │   ├── jwt.ts
+│   ├── multer.ts
 │   └── swagger.ts
 ├── controllers/
 │   ├── company-controller.ts
@@ -115,6 +118,7 @@ src/
 │   ├── auth-controller.ts
 │   ├── form-controller.ts
 │   ├── public-form-controller.ts
+│   ├── upload-controller.ts
 │   └── submission-controller.ts
 ├── services/
 │   ├── company-service.ts
@@ -122,6 +126,7 @@ src/
 │   ├── auth-service.ts
 │   ├── form-service.ts
 │   ├── public-form-service.ts
+│   ├── upload-service.ts
 │   └── submission-service.ts
 ├── routes/
 │   ├── company-routes.ts
@@ -206,6 +211,47 @@ Forms support versioning to maintain history when forms are modified:
 }
 ```
 
+## File Upload System
+
+The system supports file and image uploads with per-field validation.
+
+### How It Works
+
+1. Frontend calls validate endpoint with file metadata (size, type)
+2. Backend checks against field's configured limits
+3. If valid, frontend uploads the actual file
+4. File is stored in `uploads/{formId}/` folder
+5. File path is returned and stored in submission responseData
+
+### Upload Flow
+```
+User picks file → Validate metadata → Upload file → Get file path → Submit form with path
+```
+
+### Supported File Types
+
+**Images:** JPEG, PNG, GIF, WEBP (default max: 5MB)
+
+**Documents:** PDF, DOC, DOCX, XLS, XLSX, CSV, TXT (default max: 10MB)
+
+### Admin Configuration
+
+Admins can customize per field:
+- `maxSize`: Maximum file size in bytes
+- `allowedTypes`: Array of allowed MIME types
+
+### Example File Field
+```json
+{
+  "id": "resume",
+  "type": "file",
+  "label": "Upload Resume",
+  "required": true,
+  "maxSize": 5242880,
+  "allowedTypes": ["application/pdf"]
+}
+```
+
 ## Public Forms
 
 Forms can be accessed publicly (without authentication) when:
@@ -268,6 +314,11 @@ All endpoints validate input and return appropriate error responses:
   - [x] List submissions
   - [x] View submission details
   - [x] Delete submission (admin only)
+- [x] File Upload System
+  - [x] Pre-validation endpoint
+  - [x] File upload endpoint
+  - [x] Per-field size and type limits
+  - [x] Organized storage by form ID
 
 ## Scripts
 ```bash
