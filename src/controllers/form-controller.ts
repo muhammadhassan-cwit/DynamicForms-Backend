@@ -18,7 +18,7 @@ export const createForm = async (
       });
     }
 
-    const { title, description, structureSchema, config } = req.body;
+    const { title, description, structureSchema, config, isPublished } = req.body;  // ADD isPublished
 
     if (!title) {
       return res.status(400).json({
@@ -46,6 +46,7 @@ export const createForm = async (
       description,
       structureSchema,
       config,
+      isPublished,  // ADD THIS
     });
 
     res.status(201).json({

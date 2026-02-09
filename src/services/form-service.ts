@@ -2,6 +2,36 @@ import { prisma } from '../config/db-client';
 import { NotFoundError } from '../errors/not-found-error';
 import { v4 as uuidv4 } from 'uuid';
 
+// Helper function to compare objects/arrays deeply
+const deepEqual = (a: any, b: any): boolean => {
+  if (a === b) return true;
+  if (a === null || b === null) return a === b;
+  if (typeof a !== typeof b) return false;
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) return false;
+    }
+    return true;
+  }
+
+  if (typeof a === 'object' && typeof b === 'object') {
+    const aKeys = Object.keys(a).sort();
+    const bKeys = Object.keys(b).sort();
+
+    if (aKeys.length !== bKeys.length) return false;
+
+    for (const key of aKeys) {
+      if (!bKeys.includes(key)) return false;
+      if (!deepEqual(a[key], b[key])) return false;
+    }
+    return true;
+  }
+
+  return false;
+};
+
 
 export const createForm = async (
   companyId: string,
@@ -10,6 +40,7 @@ export const createForm = async (
     description?: string;
     structureSchema: any;
     config?: any;
+    isPublished?: boolean;
   }
 ) => {
   const company = await prisma.company.findUnique({
@@ -32,7 +63,7 @@ export const createForm = async (
       versionMajor: 1,
       versionMinor: 0,
       isCurrent: true,
-      isPublished: false,
+      isPublished: data.isPublished || false,
     },
   });
 
@@ -167,6 +198,40 @@ export const updateForm = async (
 
   const oldForm = companyForm.form;
 
+  // Check if there are actual content changes (not just publish status)
+  const hasContentChanges =
+    (data.title !== undefined && data.title !== oldForm.title) ||
+    (data.description !== undefined && data.description !== oldForm.description) ||
+    (data.structureSchema !== undefined && !deepEqual(data.structureSchema, oldForm.structureSchema)) ||
+    (data.config !== undefined && !deepEqual(data.config, oldForm.formConfig));
+
+  // If NO content changes, just update in place (no new version)
+  if (!hasContentChanges) {
+    const updatedForm = await prisma.form.update({
+      where: { id: oldForm.id },
+      data: {
+        isPublished: data.isPublished !== undefined ? data.isPublished : oldForm.isPublished,
+        updatedAt: new Date(),
+      },
+    });
+
+    return {
+      publicId: updatedForm.publicId,
+      title: updatedForm.title,
+      description: updatedForm.description,
+      structureSchema: updatedForm.structureSchema,
+      version: `${updatedForm.versionMajor}.${updatedForm.versionMinor}`,
+      isPublished: updatedForm.isPublished,
+      isCurrent: updatedForm.isCurrent,
+      company: {
+        publicId: companyForm.company.publicId,
+        name: companyForm.company.name,
+      },
+      createdAt: updatedForm.createdAt,
+    };
+  }
+
+  // If there ARE content changes, create a new version
   let newMajor = oldForm.versionMajor || 1;
   let newMinor = oldForm.versionMinor || 0;
 
