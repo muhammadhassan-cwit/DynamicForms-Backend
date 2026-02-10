@@ -8,7 +8,7 @@ type UserWithCompany = User & {
   company: {
     publicId: string;
     name: string;
-  };
+  } | null;
 };
 
 interface CreateUserInput {

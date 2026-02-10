@@ -8,6 +8,7 @@ export interface AuthRequest extends Request {
     email: string;
     role: string;
     companyId: string;
+    isSuperAdmin: boolean;
   };
 }
 
@@ -53,6 +54,7 @@ export const authenticate = async (
       email: decoded.email,
       role: decoded.role,
       companyId: decoded.companyId,
+      isSuperAdmin: decoded.isSuperAdmin,
     };
 
     next();
