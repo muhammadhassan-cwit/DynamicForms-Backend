@@ -8,7 +8,7 @@ type UserWithCompany = User & {
   company: {
     publicId: string;
     name: string;
-  };
+  } | null;
 };
 
 interface CreateUserInput {
@@ -176,7 +176,8 @@ export const deactivateUser = async (
 };
 
 export const softDeleteUser = async (
-  userId: string
+  userId: string,
+  callerRole?: string
 ): Promise<boolean> => {
   if (!userId) {
     throw new BadRequestError('User ID is required');
@@ -197,6 +198,11 @@ export const softDeleteUser = async (
   // Not found OR already deleted → treat as not found
   if (!user || user.isDeleted) {
     return false;
+  }
+
+  // Admins can only delete employees, not other admins
+  if (callerRole === 'admin' && user.role === 'admin') {
+    throw new BadRequestError('Admins cannot delete other admins');
   }
 
   await prisma.user.update({

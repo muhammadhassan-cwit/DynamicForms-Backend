@@ -35,7 +35,8 @@ export const login = async (email: string, password: string) => {
     userId: user.publicId,
     email: user.email,
     role: user.role,
-    companyId: user.company.publicId,
+    companyId: user.company?.publicId || '',
+    isSuperAdmin: user.isSuperAdmin,
   };
 
   const token = generateToken(tokenPayload);
@@ -55,10 +56,11 @@ export const login = async (email: string, password: string) => {
       email: user.email,
       fullName: user.fullName,
       role: user.role,
-      company: {
+      isSuperAdmin: user.isSuperAdmin,
+      company: user.company ? {
         publicId: user.company.publicId,
         name: user.company.name,
-      },
+      } : null,
     },
   };
 };

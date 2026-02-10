@@ -104,6 +104,22 @@ JWT_SECRET="your-64-character-secret-key"
 | GET | /api/v1/submissions/:submissionId | Get submission details | Yes | Any |
 | DELETE | /api/v1/submissions/:submissionId | Delete submission | Yes | Admin |
 
+### Super Admin
+
+All super admin routes require authentication **and** super admin privileges.
+
+| Method | Endpoint | Description | Auth | Role |
+|--------|----------|-------------|------|------|
+| GET | /api/v1/super-admin/stats | Platform-wide statistics | Yes | Super Admin |
+| GET | /api/v1/super-admin/companies | List all companies | Yes | Super Admin |
+| POST | /api/v1/super-admin/companies | Create a company | Yes | Super Admin |
+| GET | /api/v1/super-admin/companies/:companyId | Get company details + users + stats | Yes | Super Admin |
+| PATCH | /api/v1/super-admin/companies/:companyId | Update company | Yes | Super Admin |
+| DELETE | /api/v1/super-admin/companies/:companyId | Soft delete company | Yes | Super Admin |
+| GET | /api/v1/super-admin/companies/:companyId/users | List company users | Yes | Super Admin |
+| POST | /api/v1/super-admin/companies/:companyId/users | Create user in company | Yes | Super Admin |
+| DELETE | /api/v1/super-admin/companies/:companyId/users/:userId | Delete user from company | Yes | Super Admin |
+
 ## Project Structure
 ```
 src/
@@ -112,36 +128,51 @@ src/
 │   ├── jwt.ts
 │   ├── multer.ts
 │   └── swagger.ts
+├── config/
+│   ├── db-client.ts
+│   ├── jwt.ts
+│   ├── multer.ts
+│   └── swagger.ts
 ├── controllers/
-│   ├── company-controller.ts
-│   ├── user-controller.ts
 │   ├── auth-controller.ts
+│   ├── company-controller.ts
 │   ├── form-controller.ts
 │   ├── public-form-controller.ts
+│   ├── submission-controller.ts
+│   ├── super-admin-controller.ts
 │   ├── upload-controller.ts
-│   └── submission-controller.ts
+│   └── user-controller.ts
 ├── services/
-│   ├── company-service.ts
-│   ├── user-service.ts
 │   ├── auth-service.ts
+│   ├── company-service.ts
 │   ├── form-service.ts
 │   ├── public-form-service.ts
+│   ├── submission-service.ts
+│   ├── super-admin-service.ts
 │   ├── upload-service.ts
-│   └── submission-service.ts
+│   └── user-service.ts
 ├── routes/
-│   ├── company-routes.ts
-│   ├── user-routes.ts
 │   ├── auth-routes.ts
+│   ├── company-routes.ts
 │   ├── form-routes.ts
 │   ├── public-routes.ts
-│   └── submission-routes.ts
+│   ├── submission-routes.ts
+│   ├── super-admin-routes.ts
+│   └── user-routes.ts
 ├── middlewares/
-│   ├── validate-uuid-param.ts
-│   └── auth-middleware.ts
+│   ├── auth-middleware.ts
+│   ├── super-admin-middleware.ts
+│   └── validate-uuid-param.ts
 ├── errors/
 │   ├── http-error.ts
 │   ├── bad-request-error.ts
-│   └── not-found-error.ts
+│   ├── not-found-error.ts
+│   └── unauthorized-error.ts
+├── scripts/
+│   ├── cleanup-temp.ts
+│   └── seed-super-admin.ts
+├── utils/
+│   └── file-utils.ts
 ├── app.ts
 └── server.ts
 ```
@@ -170,8 +201,15 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### Roles
 
-- **Admin**: Full access (create, read, update, delete)
-- **Employee**: Limited access (read only)
+- **Super Admin**: Platform-wide access across all companies (manage companies, users, view stats)
+- **Admin**: Full access within their company (create, read, update, delete)
+- **Employee**: Limited access within their company (read only)
+
+### Role Restrictions
+
+- Admins can delete **employees** but **not other admins**
+- Super admin can delete any user via the super admin endpoint
+- Super admin bypasses company-scoped restrictions
 
 ## Form Versioning
 
@@ -299,6 +337,14 @@ All endpoints validate input and return appropriate error responses:
   - [x] Auth middleware
   - [x] Protected routes
 - [x] Role-based authorization
+  - [x] Admin / Employee roles
+  - [x] Admins cannot delete other admins
+- [x] Super Admin System
+  - [x] Super admin middleware
+  - [x] Platform-wide statistics (companies, users, forms, submissions)
+  - [x] Company management (CRUD with timezone, themeConfig, settingsMetadata)
+  - [x] Cross-company user management (create, list, delete)
+  - [x] Seed script for initial super admin
 - [x] Form CRUD
   - [x] Create form
   - [x] List forms by company
@@ -320,9 +366,25 @@ All endpoints validate input and return appropriate error responses:
   - [x] Per-field size and type limits
   - [x] Organized storage by form ID
 
+## Super Admin Setup
+
+To create the first super admin user, run the seed script:
+
+```bash
+npx ts-node src/scripts/seed-super-admin.ts
+```
+
+This creates a super admin user with:
+- **Email:** `hassan@superadmin.com`
+- **Password:** `SuperAdmin@123`
+
+The super admin has no company association (`companyId: null`) and can manage all companies and users across the platform.
+
 ## Scripts
 ```bash
 npm run dev      # Start development server
 npm run build    # Build for production
 npm start        # Start production server
+npm run cleanup:temp  # Clean up temporary upload files
+npx ts-node src/scripts/seed-super-admin.ts  # Seed super admin user
 ```
