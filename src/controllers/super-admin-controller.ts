@@ -44,7 +44,7 @@ export const createCompany = async (
   next: NextFunction
 ) => {
   try {
-    const { name, domain, address } = req.body;
+    const { name, domain, address, timezone, themeConfig, settingsMetadata } = req.body;
 
     if (!name || !domain) {
       return res.status(400).json({
@@ -57,6 +57,9 @@ export const createCompany = async (
       name,
       domain,
       address,
+      timezone,
+      themeConfig,
+      settingsMetadata,
     });
 
     res.status(201).json({
@@ -77,13 +80,16 @@ export const updateCompany = async (
 ) => {
   try {
     const { companyId } = req.params;
-    const { name, domain, address, isActive } = req.body;
+    const { name, domain, address, isActive, timezone, themeConfig, settingsMetadata } = req.body;
 
     const company = await superAdminService.updateCompany(companyId, {
       name,
       domain,
       address,
       isActive,
+      timezone,
+      themeConfig,
+      settingsMetadata,
     });
 
     res.status(200).json({
@@ -160,6 +166,24 @@ export const createCompanyUser = async (
       success: true,
       message: 'User created successfully',
       data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /super-admin/companies/:companyId/users/:userId
+export const deleteCompanyUser = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { companyId, userId } = req.params;
+    const result = await superAdminService.deleteCompanyUser(companyId, userId);
+    res.status(200).json({
+      success: true,
+      message: result.message,
     });
   } catch (error) {
     next(error);

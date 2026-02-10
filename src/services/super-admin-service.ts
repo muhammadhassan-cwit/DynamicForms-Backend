@@ -19,6 +19,9 @@ export const getAllCompanies = async () => {
     name: company.name,
     domain: company.domain,
     address: company.address,
+    timezone: company.timezone,
+    themeConfig: company.themeConfig,
+    settingsMetadata: company.settingsMetadata,
     isActive: company.isActive,
     createdAt: company.createdAt,
   }));
@@ -62,6 +65,9 @@ export const getCompanyById = async (companyId: string) => {
     name: company.name,
     domain: company.domain,
     address: company.address,
+    timezone: company.timezone,
+    themeConfig: company.themeConfig,
+    settingsMetadata: company.settingsMetadata,
     isActive: company.isActive,
     createdAt: company.createdAt,
     users: company.users,
@@ -78,6 +84,9 @@ export const createCompany = async (data: {
   name: string;
   domain: string;
   address?: string;
+  timezone?: string;
+  themeConfig?: object;
+  settingsMetadata?: object;
 }) => {
   // Check if domain already exists
   const existingCompany = await prisma.company.findUnique({
@@ -93,6 +102,9 @@ export const createCompany = async (data: {
       name: data.name,
       domain: data.domain,
       address: data.address,
+      timezone: data.timezone,
+      themeConfig: data.themeConfig ?? undefined,
+      settingsMetadata: data.settingsMetadata ?? undefined,
     },
   });
 
@@ -101,6 +113,9 @@ export const createCompany = async (data: {
     name: company.name,
     domain: company.domain,
     address: company.address,
+    timezone: company.timezone,
+    themeConfig: company.themeConfig,
+    settingsMetadata: company.settingsMetadata,
     isActive: company.isActive,
     createdAt: company.createdAt,
   };
@@ -114,6 +129,9 @@ export const updateCompany = async (
     domain?: string;
     address?: string;
     isActive?: boolean;
+    timezone?: string;
+    themeConfig?: object;
+    settingsMetadata?: object;
   }
 ) => {
   const company = await prisma.company.findFirst({
@@ -145,6 +163,9 @@ export const updateCompany = async (
       domain: data.domain ?? company.domain,
       address: data.address ?? company.address,
       isActive: data.isActive ?? company.isActive,
+      timezone: data.timezone ?? company.timezone,
+      themeConfig: data.themeConfig ?? company.themeConfig ?? undefined,
+      settingsMetadata: data.settingsMetadata ?? company.settingsMetadata ?? undefined,
     },
   });
 
@@ -153,6 +174,9 @@ export const updateCompany = async (
     name: updatedCompany.name,
     domain: updatedCompany.domain,
     address: updatedCompany.address,
+    timezone: updatedCompany.timezone,
+    themeConfig: updatedCompany.themeConfig,
+    settingsMetadata: updatedCompany.settingsMetadata,
     isActive: updatedCompany.isActive,
     createdAt: updatedCompany.createdAt,
   };
@@ -275,6 +299,43 @@ export const createCompanyUser = async (
       name: company.name,
     },
   };
+};
+
+// Delete user from a company (soft delete)
+export const deleteCompanyUser = async (companyId: string, userId: string) => {
+  const company = await prisma.company.findFirst({
+    where: {
+      publicId: companyId,
+      isDeleted: false,
+    },
+  });
+
+  if (!company) {
+    throw new NotFoundError('Company not found');
+  }
+
+  const user = await prisma.user.findFirst({
+    where: {
+      publicId: userId,
+      companyId: company.id,
+      isDeleted: false,
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundError('User not found in this company');
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      isDeleted: true,
+      isActive: false,
+      deletedAt: new Date(),
+    },
+  });
+
+  return { message: 'User deleted successfully' };
 };
 
 // Get platform statistics

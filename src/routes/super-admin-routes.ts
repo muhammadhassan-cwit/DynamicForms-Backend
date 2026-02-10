@@ -22,5 +22,6 @@ router.delete('/companies/:companyId', superAdminController.deleteCompany);
 // Company users
 router.get('/companies/:companyId/users', superAdminController.getCompanyUsers);
 router.post('/companies/:companyId/users', superAdminController.createCompanyUser);
+router.delete('/companies/:companyId/users/:userId', superAdminController.deleteCompanyUser);
 
 export default router;
