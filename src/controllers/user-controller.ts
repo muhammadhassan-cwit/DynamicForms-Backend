@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { AuthRequest } from '../middlewares/auth-middleware';
 import * as userService from '../services/user-service';
 import { BadRequestError } from '../errors/bad-request-error';
 import { NotFoundError } from '../errors/not-found-error';
@@ -86,14 +87,15 @@ export const listUsersByCompany = async (
     res.status(200).json({
       success: true,
       data: users.map((user) => ({
-        id: user.publicId,
+        publicId: user.publicId,
         email: user.email,
         fullName: user.fullName,
         role: user.role,
         isActive: user.isActive,
+        lastLoginAt: user.lastLoginAt,
         createdAt: user.createdAt,
         company: user.company ? {
-          id: user.company.publicId,
+          publicId: user.company.publicId,
           name: user.company.name,
         } : null,
       })),
@@ -180,7 +182,7 @@ export const deactivateUser = async (
 
 
 export const deleteUser = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -195,7 +197,7 @@ export const deleteUser = async (
       });
     }
 
-    const deleted = await userService.softDeleteUser(userId);
+    const deleted = await userService.softDeleteUser(userId, req.user?.role);
 
     if (!deleted) {
       throw new NotFoundError('User not found');
