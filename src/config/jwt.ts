@@ -18,6 +18,7 @@ export interface TokenPayload{
     email: string;
     role: string;
     companyId: string;
+    isSuperAdmin: boolean;
 }
 
 export const generateToken = (payload: TokenPayload): string => {
