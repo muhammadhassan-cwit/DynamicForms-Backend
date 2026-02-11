@@ -5,6 +5,7 @@ import {
     getUser,
     deactivateUser,
     deleteUser,
+    getDashboardStats,
 } from '../controllers/user-controller';
 import { validateUuidParam } from '../middlewares/validate-uuid-param';
 import { authenticate, authorize } from '../middlewares/auth-middleware';
@@ -24,6 +25,12 @@ router.get(
     authenticate,
     validateUuidParam('companyId'),
     listUsersByCompany
+);
+
+router.get(
+    '/users/stats',
+    authenticate,
+    getDashboardStats
 );
 
 router.get(

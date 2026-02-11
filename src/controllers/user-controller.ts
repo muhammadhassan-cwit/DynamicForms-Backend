@@ -211,3 +211,29 @@ export const deleteUser = async (
     next(error);
   }
 };
+
+export const getDashboardStats = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const companyId = req.user?.companyId;
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company ID not found',
+      });
+    }
+
+    const stats = await userService.getDashboardStats(companyId);
+
+    res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
