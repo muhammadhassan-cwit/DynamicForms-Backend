@@ -77,7 +77,7 @@ export const createUser = async (
     // Unique constraint violation (email per company)
     if (error.code === 'P2002') {
       throw new BadRequestError(
-        'A user with this email already exists in the company'
+        'A user with this email already exists'
       );
     }
 
