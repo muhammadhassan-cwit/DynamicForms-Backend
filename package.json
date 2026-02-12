@@ -7,8 +7,7 @@
     "dev": "ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "cleanup:temp": "ts-node src/scripts/cleanup-temp.ts"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +22,7 @@
     "@types/morgan": "^1.9.9",
     "@types/multer": "^2.0.0",
     "@types/node": "^20.11.24",
+    "@types/node-cron": "^3.0.11",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
     "@types/uuid": "^10.0.0",
@@ -42,6 +42,7 @@
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "uuid": "^13.0.0",
