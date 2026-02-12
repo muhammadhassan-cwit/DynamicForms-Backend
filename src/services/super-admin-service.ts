@@ -298,30 +298,26 @@ export const createCompanyUser = async (
     throw new NotFoundError('Company not found');
   }
 
-  // Check if email already exists in this company
-  const existingUser = await prisma.user.findFirst({
-    where: {
-      companyId: company.id,
-      email: data.email,
-    },
-  });
-
-  if (existingUser) {
-    throw new BadRequestError('User with this email already exists in this company');
-  }
-
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
-  const user = await prisma.user.create({
-    data: {
-      companyId: company.id,
-      email: data.email,
-      passwordHash: hashedPassword,
-      fullName: data.fullName,
-      role: data.role || 'employee',
-      isSuperAdmin: false,
-    },
-  });
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: {
+        companyId: company.id,
+        email: data.email,
+        passwordHash: hashedPassword,
+        fullName: data.fullName,
+        role: data.role || 'employee',
+        isSuperAdmin: false,
+      },
+    });
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      throw new BadRequestError('A user with this email already exists');
+    }
+    throw error;
+  }
 
   return {
     publicId: user.publicId,
