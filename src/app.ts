@@ -19,7 +19,9 @@ const app: Application = express();
 const API_V1 = '/api/v1';
 
 // 1. MIDDLEWARES (Security & Parsing)
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(cors());
 app.use(express.json());
 

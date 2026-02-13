@@ -77,7 +77,7 @@ export const createUser = async (
     // Unique constraint violation (email per company)
     if (error.code === 'P2002') {
       throw new BadRequestError(
-        'A user with this email already exists in the company'
+        'A user with this email already exists'
       );
     }
 
@@ -217,3 +217,63 @@ export const softDeleteUser = async (
   return true;
 };
 
+export const getDashboardStats = async (companyPublicId: string) => {
+  const company = await prisma.company.findUnique({
+    where: { publicId: companyPublicId },
+    select: { id: true },
+  });
+
+  if (!company) {
+    throw new NotFoundError('Company not found');
+  }
+
+  const [totalEmployees, totalForms, activeForms, totalRespondents, uniqueRespondents] =
+    await Promise.all([
+      prisma.user.count({
+        where: {
+          companyId: company.id,
+          isDeleted: false,
+          isActive: true,
+          isSuperAdmin: false,
+          role: 'employee',
+        },
+      }),
+      prisma.companyForm.count({
+        where: {
+          companyId: company.id,
+          form: { isDeleted: false },
+        },
+      }),
+      prisma.companyForm.count({
+        where: {
+          companyId: company.id,
+          isEnabled: true,
+          form: { isDeleted: false, isCurrent: true, isPublished: true },
+        },
+      }),
+      prisma.contactForm.count({
+        where: {
+          companyId: company.id,
+          isDeleted: false,
+        },
+      }),
+      prisma.contact.count({
+        where: {
+          companyId: company.id,
+          submissions: {
+            some: {
+              isDeleted: false,
+            },
+          },
+        },
+      }),
+    ]);
+
+  return {
+    totalEmployees,
+    totalForms,
+    activeForms,
+    totalRespondents,
+    uniqueRespondents,
+  };
+};

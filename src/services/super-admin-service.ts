@@ -36,21 +36,15 @@ export const getCompanyById = async (companyId: string) => {
     },
     include: {
       users: {
-        where: { isDeleted: false },
+        where: { isDeleted: false, isSuperAdmin: false },
         select: {
           publicId: true,
           email: true,
           fullName: true,
           role: true,
           isActive: true,
+          lastLoginAt: true,
           createdAt: true,
-        },
-      },
-      _count: {
-        select: {
-          companyForms: true,
-          contactForms: true,
-          contacts: true,
         },
       },
     },
@@ -59,6 +53,46 @@ export const getCompanyById = async (companyId: string) => {
   if (!company) {
     throw new NotFoundError('Company not found');
   }
+
+  const [totalForms, activeForms, totalRespondents, activeRespondents, uniqueRespondents] =
+    await Promise.all([
+      prisma.companyForm.count({
+        where: {
+          companyId: company.id,
+          form: { isDeleted: false },
+        },
+      }),
+      prisma.companyForm.count({
+        where: {
+          companyId: company.id,
+          isEnabled: true,
+          form: { isDeleted: false, isCurrent: true, isPublished: true },
+        },
+      }),
+      prisma.contactForm.count({
+        where: {
+          companyId: company.id,
+          isDeleted: false,
+        },
+      }),
+      prisma.contactForm.count({
+        where: {
+          companyId: company.id,
+          isDeleted: false,
+          form: { isDeleted: false, isCurrent: true },
+        },
+      }),
+      prisma.contact.count({
+        where: {
+          companyId: company.id,
+          submissions: {
+            some: {
+              isDeleted: false,
+            },
+          },
+        },
+      }),
+    ]);
 
   return {
     publicId: company.publicId,
@@ -72,9 +106,11 @@ export const getCompanyById = async (companyId: string) => {
     createdAt: company.createdAt,
     users: company.users,
     stats: {
-      totalForms: company._count.companyForms,
-      totalSubmissions: company._count.contactForms,
-      totalContacts: company._count.contacts,
+      totalForms,
+      activeForms,
+      totalRespondents,
+      activeRespondents,
+      uniqueRespondents,
     },
   };
 };
@@ -262,30 +298,26 @@ export const createCompanyUser = async (
     throw new NotFoundError('Company not found');
   }
 
-  // Check if email already exists in this company
-  const existingUser = await prisma.user.findFirst({
-    where: {
-      companyId: company.id,
-      email: data.email,
-    },
-  });
-
-  if (existingUser) {
-    throw new BadRequestError('User with this email already exists in this company');
-  }
-
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
-  const user = await prisma.user.create({
-    data: {
-      companyId: company.id,
-      email: data.email,
-      passwordHash: hashedPassword,
-      fullName: data.fullName,
-      role: data.role || 'employee',
-      isSuperAdmin: false,
-    },
-  });
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: {
+        companyId: company.id,
+        email: data.email,
+        passwordHash: hashedPassword,
+        fullName: data.fullName,
+        role: data.role || 'employee',
+        isSuperAdmin: false,
+      },
+    });
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      throw new BadRequestError('A user with this email already exists');
+    }
+    throw error;
+  }
 
   return {
     publicId: user.publicId,
@@ -345,13 +377,36 @@ export const getPlatformStats = async () => {
     activeCompanies,
     totalUsers,
     totalForms,
-    totalSubmissions,
+    activeForms,
+    totalRespondents,
+    uniqueRespondents,
   ] = await Promise.all([
     prisma.company.count({ where: { isDeleted: false } }),
     prisma.company.count({ where: { isDeleted: false, isActive: true } }),
-    prisma.user.count({ where: { isDeleted: false, isSuperAdmin: false } }),
-    prisma.form.count({ where: { isDeleted: false, isCurrent: true } }),
+    prisma.user.count({
+      where: { isDeleted: false, isSuperAdmin: false, isActive: true },
+    }),
+    prisma.companyForm.count({
+      where: {
+        form: { isDeleted: false },
+      },
+    }),
+    prisma.companyForm.count({
+      where: {
+        isEnabled: true,
+        form: { isDeleted: false, isCurrent: true, isPublished: true },
+      },
+    }),
     prisma.contactForm.count({ where: { isDeleted: false } }),
+    prisma.contact.count({
+      where: {
+        submissions: {
+          some: {
+            isDeleted: false,
+          },
+        },
+      },
+    }),
   ]);
 
   return {
@@ -359,6 +414,8 @@ export const getPlatformStats = async () => {
     activeCompanies,
     totalUsers,
     totalForms,
-    totalSubmissions,
+    activeForms,
+    totalRespondents,
+    uniqueRespondents,
   };
 };
